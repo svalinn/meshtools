@@ -1,0 +1,11 @@
+# Common temp files
+.*.sw?
+*~
+
+
+# Fortran stuff
+*.o
+*.mod
+
+# Python stuff
+*.pyc
