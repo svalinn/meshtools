@@ -6,6 +6,7 @@
 # Fortran stuff
 *.o
 *.mod
+a.out
 
 # Python stuff
 *.pyc
