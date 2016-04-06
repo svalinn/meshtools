@@ -1,11 +1,17 @@
 
 import sys
 import numpy as np
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument("input_file", help="MCNP outp file to parse for lost particles")
+parser.add_argument("--vector-length", help="Sets length of ray vectors. (Default  is 10)", default= 10.)
+args = parser.parse_args()
 
 uvw_tag_name = "RAY_DIR"
 output_filename = "lost_particle_locations.h5m"
 #open the mcnp output file
-file = open(sys.argv[1], 'rb')
+file = open(args.input_file, 'rb')
 #start with five lines in our line_cache
 line_cache = [file.readline(),file.readline(),file.readline(),file.readline(),file.readline(),file.readline()]
 #dictionary for holding lost particle info
@@ -41,7 +47,7 @@ try:
     #vertices to the MOAB instance
     verts = mbi.create_vertices(np.array([float(i) for l in lost_part_dict.values() for i in l[:3]],dtype='float64'))
     #and now tag the verices with the lost particle directions
-    mbi.tag_set_data(ray_tag_handle, verts, np.array([float(i) for l in lost_part_dict.values() for i in l[3:6]]))
+    mbi.tag_set_data(ray_tag_handle, verts, np.array([args.vector_length*float(i) for l in lost_part_dict.values() for i in l[3:6]]))
     # write the vertex locations to file
     mbi.write_file(output_filename)
     print("Done.")
@@ -59,7 +65,7 @@ try:
         #create a tag for the direction of lost particles
     ray_tag_handle = mbi.createTag(uvw_tag_name,3,'d')
     for vert,lost_part in zip(vertices,lost_part_dict.values()):
-        ray_tag_handle[vert] = [float(i) for i in lost_part[3:6]]
+        ray_tag_handle[vert] = [args.vector_length*float(i) for i in lost_part[3:6]]
     mbi.save(output_filename)
     print("Done.")
     sys.exit()
