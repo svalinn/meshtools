@@ -5,7 +5,7 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_file", help="MCNP outp file to parse for lost particles")
-parser.add_argument("--vector-length", help="Sets length of ray vectors. (Default  is 10)", default= 10.)
+parser.add_argument("--vector-length", help="Sets length of ray vectors. (Default  is 10)", type=float, default= 10.)
 args = parser.parse_args()
 
 uvw_tag_name = "RAY_DIR"
@@ -36,7 +36,6 @@ for line in file:
     
 #print out some info for user verification
 print("Found" ,len(lost_part_dict), "lost particles.")
-print(lost_part_dict["no"])
 
 #write the data to a mesh
 try:
