@@ -10,9 +10,13 @@
 #         mklostvis.pl hpl4bo 10 >cubithpl4b.jou (redirects stdout to a file)
 #
 # notes:
-#      -currently writes to stdout
-#      -prints messages prepended with # so cubit treats them as a comment
-#      -embeds some cubit commands for convenience
+#   -currently writes to stdout
+#   -prints messages prepended with # so cubit treats them as a comment
+#   -embeds some cubit commands for convenience
+#   -fixes problem if the number of lost particles is greater than 999 due to format statement in mcnp and uses counter for ilost since mcnp reports multiples in parallel runs
+#   -fixed problem if the number of lost particles is greater than 99 due to lack of a space separator (5/23/2012)
+#      e.g.
+#1   lost particle no.349     no intersection found in subroutine track     history no.    98585339
 #
 # turn off strict and warnings to sidestep problem comparing against blank lines
 #use strict;
@@ -36,20 +40,28 @@ if($nlostparticles==0){
 # get length of curves for visualization from argument list
 my $curvelength=$ARGV[1];
 print "\#   will use a curve length of: $curvelength\n";
-if($curvelength==0){
+if($curvelength<=0){
     die "Sorry, bad curve length: $curvelength\n";
 }
 #
 print "\#Everything looks OK, will process the file now...\n";
+#
+# set counter for current number of lost particles
+$ilost=0;
 # keep reading lines in the file until we reach a lost particle, then process it
 while (<FILEIN>){
     my @line=split;
 #    print "@line\n"; # prints the whole line
 #   check if line is a lost particle line and print lost particle number and nps
     if($line[0] eq "1" and $line[1] eq "lost" and $line[2] eq "particle"){
-	$ilost=$line[4];
-	$inps=$line[13];
-	#print "$line[4] $line[13]"; # prints lost particle number and nps
+#       add a space after each string "no." to make sure this is processed correctly
+        my $wholetempline=join " ",@line; # create a temp line with elements separated by space
+        $wholetempline=~ s/\./. /g; # replace a period with period space
+        #print "wholetempline is $wholetempline\n"; # prints the whole temp line
+	my @templine=split /\s+/,$wholetempline;
+	$ilost=$ilost+1;
+	$inps=$templine[13];
+#	print " templost $templine[4] $templine[13] \n"; # prints lost particle number and nps
     }elsif($line[0] eq "x,y,z" and $line[1] eq "coordinates:"){
         $x=$line[2];
         $y=$line[3];
@@ -86,6 +98,11 @@ while (<FILEIN>){
 # add line to turn on named curves in cubit file
 print "\# turn on named curve labels\n"; # comment line for cubit file
 print "label curve name only\n";
+#
+print "\#\n";
+print "\# Example cubit commands that may be useful: \n"; # comment line for cubit file
+print "\# label off\n"; # comment line for cubit file
+print "\# draw vertex with name 'v1*' curve with name 'losttrack*' volume 12 \n"; # comment line for cubit file
 #
 print "\#All done!\n";
 close FILEIN;
